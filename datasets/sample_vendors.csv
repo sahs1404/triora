@@ -1,0 +1,11 @@
+id,name,historical_delay_rate,jobs_completed,jobs_delayed
+V01,Apex Steel Fabricators,0.12,14,2
+V02,Meridian Electricals,0.1,27,3
+V03,Suncore Switchgear Ltd,0.78,36,28
+V04,PowerLine Transformers,0.71,22,16
+V05,CoolAir HVAC Systems,0.18,18,3
+V06,FlowTech Plumbing Supplies,0.15,15,2
+V07,SafeGuard Fire Systems,0.14,36,5
+V08,Vertical Elevator Co.,0.85,28,24
+V09,Facade Glass Works,0.11,14,2
+V10,GeneralBuild Materials,0.13,33,4

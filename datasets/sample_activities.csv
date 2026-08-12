@@ -1,0 +1,23 @@
+id,name,duration_days,predecessors
+A01,Site Mobilization,5,
+A02,Foundation Excavation,10,A01
+A03,Foundation Pour,8,A02
+A04,Structural Steel Erection,20,A03
+A05,Structural Steel Inspection,3,A04
+A06,Envelope / Facade,25,A05
+A07,Roofing,12,A04
+A08,Electrical Rough-In,18,A05
+A09,Switchgear Installation,22,A08
+A10,Transformer Installation,19,A09
+A11,HVAC Ductwork,15,A08
+A12,AHU Installation,7,A11
+A13,Chiller Installation,6,A12
+A14,Plumbing Rough-In,14,A08
+A15,Fire Suppression System,10,A14
+A16,Elevator Installation,20,A06|A07
+A17,Electrical Energization,4,A10
+A18,HVAC Commissioning,8,A17|A13
+A19,Fire & Life Safety Inspection,5,A15|A18
+A20,Interior Finishes,22,A16|A19
+A21,Final MEP Commissioning,10,A20
+A22,Substantial Completion,3,A21
