@@ -45,7 +45,7 @@ export default function Upload() {
       const payload = buildProjectInput(projectName.trim(), activityRows, materialRows, vendorRows)
       await buildProject(payload)
 
-      navigate('/')  // Dashboard currently reads a hardcoded name — see note below
+      navigate(`/?project=${encodeURIComponent(projectName.trim())}`)
     } catch (err) {
       setStatus('error')
       setErrorMsg(err.message || 'Something went wrong while building the project.')

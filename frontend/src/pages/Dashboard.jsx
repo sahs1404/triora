@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getProject } from '../api/projectApi.js'
-
-const PROJECT_NAME = "demo_project" // hardcoded for now — Upload page will make this dynamic
-
 export default function Dashboard() {
+  const [searchParams] = useSearchParams()
+  const PROJECT_NAME = searchParams.get('project') || 'demo_project'
+
   const [state, setState] = useState(null)
   const [error, setError] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
@@ -12,7 +13,7 @@ export default function Dashboard() {
     getProject(PROJECT_NAME)
       .then(setState)
       .catch((err) => setError(err.message))
-  }, [])
+  }, [PROJECT_NAME])
 
   if (error) {
     return (

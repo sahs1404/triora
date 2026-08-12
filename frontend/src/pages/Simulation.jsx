@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getProject, getVendors, runWhatIf } from '../api/projectApi.js'
-
-const PROJECT_NAME = "demo_project" // matches Dashboard.jsx for now — router.jsx will fix this
-
 const CHANGE_TYPES = [
   { value: 'expedite_material', label: 'Expedite a material (reduce lead time)' },
   { value: 'delay_material', label: 'Delay a material (increase lead time)' },
@@ -11,6 +9,9 @@ const CHANGE_TYPES = [
 ]
 
 export default function Simulation() {
+  const [searchParams] = useSearchParams()
+  const PROJECT_NAME = searchParams.get('project') || 'demo_project'
+
   const [project, setProject] = useState(null)
   const [vendors, setVendors] = useState([])
   const [error, setError] = useState(null)
@@ -30,7 +31,7 @@ export default function Simulation() {
         setVendors(vend)
       })
       .catch((err) => setError(err.message))
-  }, [])
+  }, [PROJECT_NAME])
 
   const isActivityChange = changeType === 'change_duration'
   const isVendorChange = changeType === 'reassign_vendor'
