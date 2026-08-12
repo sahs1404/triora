@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getProject } from '../api/projectApi.js'
+import RecoveryCard from '../components/AIRecommendations/RecoveryCard.jsx'
 export default function Dashboard() {
   const [searchParams] = useSearchParams()
   const PROJECT_NAME = searchParams.get('project') || 'demo_project'
@@ -101,6 +102,9 @@ export default function Dashboard() {
               }}>
                 {selected.reason}
               </div>
+              {selected.status !== 'safe' && (
+              <RecoveryCard projectName={PROJECT_NAME} materialId={selected.material_id} />
+              )}
             </>
           ) : (
             <p style={{ color: 'var(--muted)' }}>Select a material to see details.</p>

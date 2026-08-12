@@ -1,23 +1,20 @@
 from pydantic import BaseModel
-from typing import Literal
 
 
 class RecoveryOption(BaseModel):
-    action: Literal[
-        "expedite_shipment",
-        "partial_shipment",
-        "alternate_supplier",
-        "resequence_activity",
-        "absorb_delay",
-    ]
-    description: str
-    estimated_cost_inr: float
-    estimated_days_recovered: float
-    recommended: bool = False
+    """One candidate intervention for a critical/watch material."""
+    action: str                       # short label e.g. "Expedite Shipment"
+    description: str                  # 1-2 sentence explanation
+    estimated_days_recovered: int     # how many days of delay this claws back
+    estimated_cost: str               # "Low" / "Medium" / "High" (qualitative for demo)
+    feasibility: str                  # "High" / "Medium" / "Low"
+    score: float                      # internal ranking score (higher = better pick)
 
 
 class RecoveryRecommendation(BaseModel):
+    """Full recovery response for one material."""
     material_id: str
+    material_name: str
+    current_status: str
     options: list[RecoveryOption]
-    best_option_index: int
-    reasoning: str
+    recommended_action: str           # the top-ranked option's action, surfaced directly

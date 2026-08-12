@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import upload, dashboard, simulation, vendors
+from routes import upload, dashboard, simulation, vendors, recovery
 from database.session import Base, engine
 from database import models
 
@@ -25,7 +25,7 @@ app.include_router(upload.router)
 app.include_router(dashboard.router)
 app.include_router(simulation.router)
 app.include_router(vendors.router)
-
+app.include_router(recovery.router)
 
 @app.get("/")
 def root():
