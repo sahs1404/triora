@@ -5,3 +5,4 @@ sqlalchemy
 networkx
 pandas
 requests
+python-multipart
