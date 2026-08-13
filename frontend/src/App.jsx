@@ -3,6 +3,7 @@ import NavBar from './components/NavBar.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Upload from './pages/Upload.jsx'
 import Simulation from './pages/Simulation.jsx'
+import VendorPanel from './pages/VendorPanel.jsx'
 import CVUpload from './pages/CVUpload.jsx'
 
 function App() {
@@ -13,7 +14,8 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/simulate" element={<Simulation />} />
-        <Route path="/cv" element={<CVUpload />} />
+        <Route path="/vendors" element={<VendorPanel />} />
+        <Route path="/cv-verify" element={<CVUpload />} />
       </Routes>
     </BrowserRouter>
   )
