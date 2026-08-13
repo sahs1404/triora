@@ -1,4 +1,22 @@
+# Node
 node_modules/
-dist/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Database
+*.db
+
+# Environment files
 .env
-.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML model weights (auto-downloaded)
+*.pt
