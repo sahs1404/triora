@@ -46,7 +46,7 @@ async def submit_photo_evidence(
             f"{CV_SERVICE_URL}/verify",
             files={"photo": (photo.filename, photo_bytes, photo.content_type)},
             data={"expected_stage": expected_stage},
-            timeout=30,
+            timeout=90,
         )
         response.raise_for_status()
         cv_result = response.json()
