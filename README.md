@@ -1,346 +1,349 @@
-\# Triora
+# Triora
 
+**40 alerts. Only 2 matter.**
 
+Construction material risk triage for the AI-native supply chain.
 
-\### 40 alerts. Only 2 matter.
+Built for the **Kaya AI India Hackathon 2026 — Track 2: Supply Chain**.
 
+[Live Demo](https://triora-xi.vercel.app) · [Backend API](https://triora-zouh.onrender.com)
 
+---
 
-\*\*Construction material risk triage for the AI-native supply chain.\*\*
+## Overview
 
+Construction projects deal with hundreds of material packages at any given time — steel, switchgear, ductwork, fasteners, equipment, and more. A typical project can have dozens of materials showing some kind of delay signal: a late vendor update, a missed submittal date, or a shipment that is running behind schedule.
 
+Most tracking systems treat these signals similarly. If something is late, it gets flagged.
 
-Built for the \*\*Kaya AI India Hackathon 2026\*\* — Track 2: Supply Chain
+The problem is that **not every late material is actually a project risk**.
 
+A material that arrives 10 days late may have no impact if the activity using it has 10 days of schedule float. On the other hand, a material that is only two days late could delay commissioning if it is required for an activity sitting directly on the critical path.
 
+Triora is built around this distinction.
 
-\[!\[Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://triora-xi.vercel.app)
+Instead of asking:
 
-\[!\[Backend API](https://img.shields.io/badge/API-FastAPI-009688)](https://triora-zouh.onrender.com)
+> Is this material late?
 
+Triora asks:
 
+> **If this material is late, does the delay actually reach something that matters?**
 
-\---
+---
 
+## The Core Idea
 
+Triora combines project dependencies, schedule information, material data, and vendor reliability to calculate a **Criticality-Weighted Risk Score (CWRS)** for each tracked material.
 
-\## The Problem
+The score is based on three main factors:
 
+* Probability that the material will miss its need-by date
+* The amount of schedule float available to absorb the delay
+* The downstream impact of the material on the rest of the project
 
-
-Every active construction project tracks hundreds of material packages — steel, switchgear, ductwork, fasteners. On any given week, dozens of them show \*some\* kind of delay signal: a late vendor email, a missed submittal date, a shipment running behind schedule.
-
-
-
-Existing tools flag all of them the same way. Red. Late. At risk.
-
-
-
-\*\*A project manager staring at 40 identical red flags has no way to know which ones actually threaten the project — so in practice, they act on none of them.\*\*
-
-
-
-This is the real failure mode in construction supply chains. Not a lack of data. A lack of triage.
-
-
-
-\## The Insight
-
-
-
-> \*\*Delivery delay ≠ project delay.\*\*
-
-
-
-A material that arrives \*\*10 days late\*\* might cost the project \*nothing\*, if the activity it feeds has 10 days of schedule float to absorb it.
-
-
-
-A material that's only \*\*2 days late\*\* can \*\*halt commissioning\*\*, if it sits with zero float directly on the critical path.
-
-
-
-Existing trackers cannot tell these two cases apart. They're both just "late."
-
-
-
-Triora can — because it doesn't ask \*"is this late?"\* It asks \*"does this lateness reach anything that matters?"\*
-
-
-
-\---
-
-
-
-\## What Triora Does
-
-
-
-Triora ingests a project's schedule, materials, and vendor data, then computes a \*\*Criticality-Weighted Risk Score (CWRS)\*\* for every tracked material — ranking risk not by how late something is, but by how much of that lateness the project can actually absorb.
-
-
+Conceptually:
 
 $$
-
-\\text{CWRS} = P(\\text{delay}) \\times \\left(1 - \\frac{\\text{float}}{\\text{lead time}}\\right) \\times \\text{downstream blast radius}
-
+\text{CWRS} =
+P(\text{delay})
+\times
+\left(1-\frac{\text{float}}{\text{lead time}}\right)
+\times
+\text{downstream blast radius}
 $$
 
+The three components capture different aspects of risk:
 
+| Component                  | What it captures                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **P(delay)**               | Probability that the material will miss its need-by date, based on vendor reliability and available evidence |
+| **Float-adjusted urgency** | How much schedule slack exists before a material delay starts affecting the project                          |
+| **Blast radius**           | How many downstream activities and milestones depend on the material                                         |
 
-| Term | What it captures |
+This means a material with a poor vendor history does not automatically become the highest-risk item. Its actual position in the project schedule matters.
 
-|---|---|
+In our demo project, Triora tracks **137 materials across 22 activities and 10 vendors**. The system narrows these down to a small number of materials that have meaningful project-level risk.
 
-| \*\*P(delay)\*\* | Probability this material misses its need-by date — learned from vendor reliability, not guessed |
+---
 
-| \*\*Urgency\*\* (float-adjusted) | How much schedule slack exists to absorb a delay before it matters |
+## Why the Dependency Graph Matters
 
-| \*\*Blast radius\*\* | How many downstream activities and milestones depend on this material |
+The key differentiator in Triora is that we do not treat material delay purely as a prediction problem.
 
+The project schedule is represented as a dependency graph, after which we use the **Critical Path Method (CPM)** to calculate activity timings and schedule float.
 
+This gives us a structural view of the project.
 
-Out of 137 tracked materials in our demo project, this consistently surfaces \*\*just 1–2 that are genuinely critical\*\* — while correctly ranking a material with the \*worst vendor reliability score in the dataset\* as low-priority, because it sits on an activity with real schedule float. \*\*That contrast is the proof of the entire thesis, reproducible in the running system, not just claimed on a slide.\*\*
+For example:
 
+* Material A may be 10 days late but feed an activity with 12 days of float.
+* Material B may be only 2 days late but feed an activity with zero float on the critical path.
 
+A simple delay-based system would likely rank A as more urgent.
 
-\---
+Triora can rank B higher because its delay has a much greater chance of reaching a project milestone.
 
+This is what allows the system to distinguish between **"late but safe"** and **"slightly late but critical."**
 
+---
 
-\## Live Demo
+## What Triora Does
 
+The system currently supports four main workflows.
 
+### 1. Risk Triage
 
-| | |
+Upload project schedule and material data and generate a ranked list of materials based on their project-level risk.
 
-|---|---|
+The scoring engine can be applied to new project data rather than being limited to the sample dataset.
 
-| \*\*Frontend (Vercel)\*\* | \[triora-xi.vercel.app](https://triora-xi.vercel.app) |
+### 2. What-If Simulation
 
-| \*\*Backend API (Render)\*\* | \[triora-zouh.onrender.com](https://triora-zouh.onrender.com) |
+Triora can simulate changes such as:
 
-| \*\*CV Inference Service (Render)\*\* | \[cverify-ph84.onrender.com](https://cverify-ph84.onrender.com) \*(see note below)\* |
+* Switching a vendor
+* Changing an activity duration
+* Expediting a material
+* Introducing an additional delay
 
-| \*\*Demo Video\*\* | \[Link — YouTube/Loom] |
+The system reruns the same dependency, CPM, and CWRS pipeline after the change, allowing users to see how the project's risk ranking changes.
 
+### 3. Vendor Reliability Learning
 
+Vendor reliability is updated from historical job outcomes.
 
-> \*\*Note on free-tier hosting:\*\* Render's free tier spins down on inactivity, so the first request to the backend or CV service after idle time can take 30–60s to wake up. Subsequent requests are fast. Our CV inference service, in particular, runs reliably but is CPU-slow on free-tier hardware — it's fully built and functional (see Architecture below), and demonstrated locally in our demo video rather than depending on live free-tier latency during judging.
+Instead of treating vendor reliability as a fixed value, the system updates the estimate as more outcomes are recorded. This allows the probability of delay to gradually reflect observed vendor performance.
 
+### 4. Site Photo Verification
 
+The CV service uses YOLOv8 to detect construction stages from site photographs.
 
-\---
+The detected stage can then be compared with the expected state of the project schedule, providing an additional source of evidence when assessing delay risk.
 
+---
 
+## Architecture
 
-\## Architecture
+```text
+                         FRONTEND
+                    React + Vite
+                           |
+                           | REST / JSON
+                           v
+                 -----------------------
+                 |       BACKEND       |
+                 | FastAPI + SQLite    |
+                 -----------------------
+                    |       |       |
+                    v       v       v
+                 Graph     CPM     CWRS
+                Service  Service  Service
+                    |       |       |
+                    +-------+-------+
+                            |
+                    Simulation Service
+                            |
+                    Vendor Service
+                            |
+                            v
+                 -----------------------
+                 |   CV INFERENCE     |
+                 | FastAPI + YOLOv8   |
+                 -----------------------
+                            |
+                       Site Photo
+                            |
+                            v
+                  Construction Stage
+```
 
-┌─────────────────────────────────────────────────────────────┐
+### Backend
 
-│ FRONTEND (React + Vite) │
+The backend is divided into several services.
 
-│ │
+**Graph Service**
 
-│ Dashboard Upload Simulate Vendors CV Verify │
+Builds the project's dependency graph from the uploaded schedule.
 
-│ (triage (CSV → (what-if (reliability (photo → │
+**CPM Service**
 
-│ list) score) engine) learning) evidence) │
+Runs the forward and backward passes required for Critical Path Method calculations and derives activity float and critical-path information.
 
-└───────────────────────────┬────────────────────────────────────┘
+**CWRS Service**
 
-│ REST (JSON)
+Calculates the Criticality-Weighted Risk Score for each material and ranks the resulting risks.
 
-┌───────────────────────────▼────────────────────────────────────┐
+**Simulation Service**
 
-│ BACKEND (FastAPI + SQLite) │
+Reruns the complete scoring pipeline after hypothetical project changes such as vendor swaps or activity-duration changes.
 
-│ │
+**Vendor Service**
 
-│ ┌──────────────┐ ┌──────────────┐ ┌─────────────────────┐ │
+Updates vendor reliability estimates based on historical job outcomes.
 
-│ │ graph\_service │→│ cpm\_service │→│ cwrs\_service │ │
+### CV Inference Service
 
-│ │ builds DAG │ │ forward/back │ │ scores every │ │
+The CV component runs separately using FastAPI and YOLOv8.
 
-│ │ from schedule │ │ pass → float, │ │ material, ranks by │ │
+A site photograph is processed to identify the construction stage. This can then be compared with the expected project state and used as an additional evidence signal for delay assessment.
 
-│ │ │ │ critical path │ │ risk, tags status │ │
+---
 
-│ └──────────────┘ └──────────────┘ └─────────────────────┘ │
+## What's Built
 
-│ │
+| Component                                  | Status                         |
+| ------------------------------------------ | ------------------------------ |
+| Dependency graph and CPM float calculation | Built                          |
+| Critical-path identification               | Built                          |
+| CWRS scoring engine                        | Built                          |
+| CSV upload and live scoring pipeline       | Built                          |
+| What-if simulation                         | Built                          |
+| Vendor reliability learning                | Built                          |
+| CV site-photo verification                 | Built and demonstrated locally |
+| Document intelligence for emails and PDFs  | Planned                        |
+| Prescriptive recovery optimization         | Planned                        |
+| Cross-project inventory rebalancing        | Planned                        |
 
-│ ┌───────────────────┐ ┌────────────────────────────────┐ │
+We have deliberately separated implemented functionality from future work. The components marked as built are running in the current system and were demonstrated during development.
 
-│ │ simulation\_service │ │ vendor\_service │ │
+---
 
-│ │ re-runs the full │ │ Bayesian-ish reliability update │ │
+## Live Demo
 
-│ │ engine on a │ │ from real job outcomes — this │ │
+**Frontend:** [triora-xi.vercel.app](https://triora-xi.vercel.app)
 
-│ │ hypothetical change│ │ is what makes P(delay) a │ │
+**Backend API:** [triora-zouh.onrender.com](https://triora-zouh.onrender.com)
 
-│ │ (vendor swap, │ │ learning signal, not a static │ │
+**CV Inference Service:** [cverify-ph84.onrender.com](https://cverify-ph84.onrender.com)
 
-│ │ duration change) │ │ lookup │ │
+**Demo Video:** Coming soon
 
-│ └───────────────────┘ └────────────────────────────────┘ │
+The backend and CV service are hosted on Render's free tier. Because the services can spin down after periods of inactivity, the first request after an idle period may take some time to respond.
 
-└───────────────────────────┬────────────────────────────────────┘
+The CV inference service is also CPU-bound on the free-tier hardware. It is fully implemented and functional, and the complete workflow is demonstrated locally in our project demo.
 
-│
+---
 
-┌───────────────────────────▼────────────────────────────────────┐
+## Tech Stack
 
-│ CV INFERENCE SERVICE (FastAPI + YOLOv8) │
+**Backend**
 
-│ Site photo → detected construction stage → compared against │
+Python, FastAPI, SQLAlchemy, SQLite, NetworkX
 
-│ expected schedule state → mismatch feeds back into P(delay) │
+**Frontend**
 
-└─────────────────────────────────────────────────────────────────┘
+React, Vite, React Router, PapaParse
 
-\### Why this shape
+**Machine Learning / Computer Vision**
 
+YOLOv8, Ultralytics
 
+**Deployment**
 
-\- \*\*The graph and CPM layer is the actual differentiator.\*\* Most competing approaches predict "is this late" as a classification problem. We treat it as a \*\*structural\*\* problem — build the real dependency graph, run a proper forward/backward CPM pass, and derive float honestly. This is what lets us tell "late but safe" apart from "on-time but critical," live, on any uploaded project — not just our demo data.
+Vercel, Render
 
-\- \*\*The what-if simulator reuses the exact same scoring engine\*\* for a "before" and "after" run — nothing is faked or pre-scripted. Swap a vendor, stretch an activity's duration, and the entire 137-material ranking recalculates in real time. This is the strongest proof that the system is a real engine, not a static score.
+---
 
-\- \*\*Vendor learning closes the loop.\*\* `P(delay)` isn't a number someone typed in once — it updates from recorded job outcomes via a weighted-average rule, so a vendor's reliability score reflects real history and grows more resistant to single-outlier swings as more jobs are recorded.
+## Running Locally
 
-\- \*\*CV verification extends the evidence layer\*\*, grounding P(delay) updates in physical reality (a site photo) rather than only self-reported vendor status.
-
-
-
-\---
-
-
-
-\## What's Built vs. Roadmap
-
-
-
-We were deliberate about scope rather than claiming more than we could prove. Everything below \*\*Built\*\* is running, tested, and demonstrated in the video — not aspirational.
-
-
-
-| Layer | Status |
-
-|---|---|
-
-| Dependency graph + CPM float/critical-path calculation | ✅ Built |
-
-| CWRS scoring engine, applied to any uploaded project (not just our demo data) | ✅ Built |
-
-| CSV upload → live scoring pipeline | ✅ Built |
-
-| What-if simulator (vendor swap, duration change, expedite/delay) | ✅ Built |
-
-| Vendor reliability learning (job-outcome → updated P(delay)) | ✅ Built |
-
-| CV site-photo verification (YOLOv8 stage detection → evidence signal) | ✅ Built, demoed locally (see hosting note above) |
-
-| Document intelligence (auto-extracting evidence from unstructured emails/PDFs) | 🔜 Roadmap |
-
-| Prescriptive recovery optimizer (OR-Tools cost/time-optimal interventions) | 🔜 Roadmap |
-
-| Cross-project inventory rebalancing | 🔜 Roadmap |
-
-
-
-\---
-
-
-
-\## Tech Stack
-
-
-
-\*\*Backend:\*\* Python, FastAPI, SQLAlchemy, SQLite, NetworkX
-
-\*\*Frontend:\*\* React, Vite, React Router, Papaparse
-
-\*\*ML/CV:\*\* YOLOv8, Ultralytics
-
-\*\*Deployment:\*\* Render (backend + CV service), Vercel (frontend)
-
-
-
-\---
-
-
-
-\## Running Locally
-
-
-
-\### Backend
+### Backend
 
 ```bash
-
 cd backend
-
 pip install -r requirements.txt --break-system-packages
-
-python -m database.init\_db
-
+python -m database.init_db
 uvicorn app:app --reload --port 8000
-
 ```
 
-
-
-\### Frontend
+### Frontend
 
 ```bash
-
 cd frontend
-
 npm install
-
 npm run dev
-
 ```
 
+The frontend will be available at:
 
+```text
+http://localhost:5173
+```
 
-Visit `http://localhost:5173`. The app expects the backend at `http://127.0.0.1:8000` by default (see `frontend/src/api/client.js`).
+By default, it expects the backend to be running at:
 
+```text
+http://127.0.0.1:8000
+```
 
+The API configuration can be found in:
 
-\### Sample data
+```text
+frontend/src/api/client.js
+```
 
-Test datasets (137 materials, 22 activities, 10 vendors) are in `datasets/` — see `datasets/README.md` for the CSV schema and the specific "story" baked into the sample data that proves the core thesis.
+### Sample Data
 
+The repository includes sample datasets containing:
 
+* 137 materials
+* 22 activities
+* 10 vendors
 
-\---
+The datasets are available in the `datasets/` directory.
 
+See `datasets/README.md` for the CSV schema and information about the example scenario used to demonstrate the risk-triage workflow.
 
+---
 
-\## The Team
+## Project Structure
 
+```text
+Triora/
+├── backend/
+│   ├── services/
+│   ├── database/
+│   └── app.py
+│
+├── frontend/
+│   ├── src/
+│   └── ...
+│
+├── datasets/
+│   └── README.md
+│
+├── docs/
+│   └── round1_proposal.md
+│
+└── README.md
+```
 
+---
 
-Built by \*\*\[Team Name]\*\* — \[Sahasra Oleti, Ayusha Hongekar, Tanvi Gattani, Sachi Sarda] — for Track 2: Supply Chain, Kaya AI India Hackathon 2026.
+## Team
 
+Built by **Sahasra Oleti, Ayusha Hongekar, Tanvi Gattani, and Sachi Sarda** for the **Kaya AI India Hackathon 2026 — Track 2: Supply Chain**.
 
+We come from the Industrial Engineering and Operations Research program at IIT Bombay. That background influenced one of the central decisions behind Triora: rather than treating supply-chain risk purely as a prediction problem, we model the underlying project structure using dependency graphs and Critical Path Method.
 
-Our team came in from Industrial Engineering and Operations Research — which is exactly why we reached for critical-path method and dependency graphs instead of treating this purely as a prediction problem. Decades-old OR ideas, paired with an AI layer that lets them act on live, messy, real-world data — that pairing is the whole bet behind Triora.
+The goal was to combine established Operations Research techniques with machine learning and real-world project data to make risk signals more useful for decision-making.
 
+---
 
+## Future Work
 
-\---
+There are several directions we would like to explore further:
 
+* Automatically extracting schedule and risk signals from emails, PDFs, and other unstructured project documents
+* Adding a prescriptive optimization layer to recommend cost- and time-efficient recovery actions
+* Extending the system to rebalance inventory across multiple projects
+* Improving the CV pipeline and incorporating richer site-level evidence
+* Learning more sophisticated vendor delay models from larger historical datasets
 
+---
 
-\## Round 1 Proposal
+## Project Documentation
 
+The original Round 1 proposal and supporting documentation are available in:
 
-
-The full written proposal, pitch deck, and original insight write-up are in \[`docs/round1\_proposal.md`](docs/round1\_proposal.md).
-
+`docs/round1_proposal.md`
