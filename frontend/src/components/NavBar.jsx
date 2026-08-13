@@ -4,6 +4,7 @@ const links = [
   { to: '/', label: 'Dashboard' },
   { to: '/upload', label: 'Upload' },
   { to: '/simulate', label: 'Simulate' },
+  { to: '/cv', label: 'CV Verify' },
 ]
 
 export default function NavBar() {
